@@ -99,3 +99,18 @@ body {
 .bars.off i { animation:none; height:3px; opacity:.4; }
 @keyframes wv { 0%,100%{height:3px} 50%{height:14px} }
 @media (prefers-reduced-motion:reduce) { .bars i, .animate-pulse { animation:none !important; } }
+/* Prevent mobile pinch-zoom and viewport bouncing on 3D view */
+body, html {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
