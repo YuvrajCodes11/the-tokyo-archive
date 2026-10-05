@@ -294,7 +294,7 @@ export default function Sanctuary({ onBack }) {
         </div>
       )}
 
-      {/* Top HUD: Clean & Non-colliding */}
+      {/* Top HUD */}
       <header className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-6 z-30 flex justify-between items-center text-[.65rem] tracking-[.25em] font-display pointer-events-auto">
         <button
           data-mag
@@ -330,7 +330,7 @@ export default function Sanctuary({ onBack }) {
       </header>
 
       {/* Bottom Colorway Selector Pills */}
-      <div className="absolute bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-wrap justify-center gap-1.5 sm:gap-2 pointer-events-auto max-w-[94vw]">
+      <div className="absolute bottom-28 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-wrap justify-center gap-1.5 sm:gap-2 pointer-events-auto max-w-[94vw]">
         {COLORWAYS.map((c, i) => (
           <button
             key={c.id}
@@ -348,30 +348,24 @@ export default function Sanctuary({ onBack }) {
         ))}
       </div>
 
-      {/* Specification Sheet / Mobile Dedicated Toggle Bar */}
+      {/* Specification Sheet - Fixed mobile toggle with standalone button */}
       <aside 
-        onClick={() => {
-          if (window.innerWidth <= 768) setSpecsOpen(!specsOpen)
-        }}
-        className={`absolute z-35 inset-x-3 sm:right-6 sm:inset-x-auto bottom-3 md:bottom-auto md:top-1/2 md:-translate-y-1/2 w-[auto] md:w-[min(92vw,340px)] bg-ink/95 md:bg-ink/55 backdrop-blur-xl border border-white/15 p-4 sm:p-6 shadow-[10px_10px_0_#000] transition-all duration-300 cursor-pointer md:cursor-default ${
-          specsOpen ? 'max-h-[75vh] overflow-y-auto' : 'max-h-[75px] md:max-h-none overflow-hidden'
+        className={`absolute z-40 inset-x-3 sm:right-6 sm:inset-x-auto bottom-3 md:bottom-auto md:top-1/2 md:-translate-y-1/2 w-[auto] md:w-[min(92vw,340px)] bg-ink/95 md:bg-ink/55 backdrop-blur-xl border border-white/15 p-4 sm:p-6 shadow-[10px_10px_0_#000] transition-all duration-300 pointer-events-auto ${
+          specsOpen ? 'max-h-[80vh] overflow-y-auto' : 'max-h-[72px] md:max-h-none overflow-hidden'
         }`}
       >
-        <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => setSpecsOpen(!specsOpen)}>
-          <div>
+        <div className="flex justify-between items-center select-none">
+          <div className="cursor-pointer flex-1" onClick={() => setSpecsOpen(!specsOpen)}>
             <p className="spec font-display font-bold text-[.56rem] tracking-[.4em] text-vermilion m-0 mb-0.5">SPECIFICATIONS — 仕様</p>
             <h3 className="spec font-mincho font-extrabold text-base sm:text-2xl m-0">The Tokyo Monolith Tote</h3>
           </div>
           <button 
             type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setSpecsOpen(!specsOpen)
-            }}
-            className="text-white/90 hover:text-white p-2 cursor-pointer bg-white/10 rounded-full"
+            onClick={() => setSpecsOpen(!specsOpen)}
+            className="text-white hover:text-vermilion p-3 -mr-1 cursor-pointer bg-white/10 hover:bg-white/20 rounded-lg transition"
             aria-label="Toggle Specifications"
           >
-            {specsOpen ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+            {specsOpen ? <ChevronDown size={22} /> : <ChevronUp size={22} />}
           </button>
         </div>
 
@@ -432,7 +426,7 @@ export default function Sanctuary({ onBack }) {
               </div>
 
               <p className="mt-6 text-[11px] leading-relaxed text-white/60 font-display">
-                Authentic Marc Jacobs Woven Tote Bag Archive Edition. Hand-crafted jacquard weave with dual structured handles and archival certification.
+                Each piece is hand-finished in Tokyo with certified serial stamping and presented in the archival matte presentation case.
               </p>
             </div>
 
