@@ -3,15 +3,17 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import gsap from 'gsap'
-import { MapPin, Volume2, VolumeX, Layers, Ruler, Palette, Gem } from 'lucide-react'
+import { MapPin, Volume2, VolumeX, Layers, Ruler, Palette, Gem, ChevronUp, ChevronDown } from 'lucide-react'
 import { Sound, useJST, Split } from './shared.jsx'
 
+/* ───────────────────────── ACT IV — 3D TOKYO SANCTUARY (MOBILE OPTIMIZED) ───────────────────────── */
 export default function Sanctuary({ onBack }) {
   const root = useRef(), tc = useRef()
   const [sound, setSound] = useState(true)
   const [volume, setVolState] = useState(0.65)
   const [cwIdx, setCwIdx] = useState(0)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [specsOpen, setSpecsOpen] = useState(false) // Mobile collapsible spec sheet
   const [loadingModel, setLoadingModel] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const jst = useJST()
@@ -53,7 +55,8 @@ export default function Sanctuary({ onBack }) {
     const updateCam = () => {
       const aspect = window.innerWidth / window.innerHeight
       cam.aspect = aspect
-      cam.position.z = aspect < 1 ? 12.0 / aspect : 8.6
+      // Responsive camera distance: pulls back further on mobile portrait so the bag fits perfectly
+      cam.position.z = aspect < 1 ? 13.5 / aspect : 8.8
       cam.updateProjectionMatrix()
     }
     updateCam()
@@ -96,7 +99,7 @@ export default function Sanctuary({ onBack }) {
     scene.add(shadow)
 
     const partGeo = new THREE.BufferGeometry()
-    const partCount = 85
+    const partCount = 75
     const partPos = new Float32Array(partCount * 3)
     for (let i = 0; i < partCount * 3; i += 3) {
       partPos[i] = (Math.random() - 0.5) * 14
@@ -147,18 +150,14 @@ export default function Sanctuary({ onBack }) {
         const center = box.getCenter(new THREE.Vector3())
 
         const pivot = new THREE.Group()
-
         model.position.x -= center.x
         model.position.y -= center.y
         model.position.z -= center.z
-
         pivot.add(model)
-
-        // 180° rotation so the front logo directly faces forward
         pivot.rotation.y = Math.PI
 
         const maxDim = Math.max(size.x, size.y, size.z)
-        const scaleFactor = 3.6 / maxDim
+        const scaleFactor = 3.4 / maxDim
         pivot.scale.setScalar(scaleFactor)
 
         shadow.position.y = - (size.y * scaleFactor * 0.5) - 0.04
@@ -170,7 +169,7 @@ export default function Sanctuary({ onBack }) {
       undefined,
       (err) => {
         console.error('Failed to load model:', err)
-        setLoadError('Please verify marc_jacobs_woven_tote_bag.glb is in the public/ folder.')
+        setLoadError('Please verify marc_jacobs_woven_tote_bag.glb is in public/ folder.')
         setLoadingModel(false)
       }
     )
@@ -235,16 +234,13 @@ export default function Sanctuary({ onBack }) {
       }
 
       bagGroup.rotation.x = Math.max(-0.55, Math.min(0.55, bagGroup.rotation.x))
-      bagGroup.position.y = Math.sin(t * 1.4) * 0.07
+      bagGroup.position.y = Math.sin(t * 1.4) * 0.06
       particles.rotation.y = t * 0.025
 
       renderer.render(scene, cam)
       reqId = requestAnimationFrame(animate)
     }
     animate()
-
-    gsap.from('.spec', { opacity: 0, x: 40, duration: 1, stagger: 0.12, ease: 'power3.out', delay: 0.3 })
-    gsap.from('.hudin', { opacity: 0, y: -20, duration: 1, delay: 0.2 })
 
     return () => {
       cancelAnimationFrame(reqId)
@@ -278,46 +274,41 @@ export default function Sanctuary({ onBack }) {
 
   return (
     <section ref={root} className="fixed inset-0 overflow-hidden" style={{ background: 'radial-gradient(circle at 50% 45%, #1c0a10, #0a0a0a 70%)' }}>
+      {/* Background Kinetic Typography */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none select-none">
         <h1 className="l1 font-display font-black text-[17vw] md:text-[15vw] leading-[.82] m-0 outline-text"><Split text="MARC" /></h1>
         <h1 className="l2 font-display font-black text-[17vw] md:text-[15vw] leading-[.82] m-0 text-chrome/90"><Split text="JACOBS" /></h1>
         <p className="font-mincho font-extrabold text-vermilion text-[3.6vw] md:text-[2vw] tracking-[.4em] mt-4">マーク ジェイコブス 東京</p>
       </div>
 
-      <canvas ref={tc} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing" />
+      <canvas ref={tc} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing z-10" />
 
       {loadingModel && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20 gap-3">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-30 gap-3">
           <div className="w-8 h-8 border-2 border-vermilion border-t-transparent rounded-full animate-spin" />
           <p className="font-display text-[10px] tracking-[0.4em] text-white/70 uppercase">LOADING ARCHIVE TOTE BAG 3D...</p>
         </div>
       )}
 
-      {loadError && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-red-950/80 border border-red-500 text-white p-4 text-xs font-mono z-30 max-w-md text-center backdrop-blur-md">
-          {loadError}
-        </div>
-      )}
-
-      {/* Top HUD with Back Button, Volume Bar, Sound Toggle & Clock */}
-      <header className="hudin absolute top-5 inset-x-5 z-20 flex justify-between items-center text-[.7rem] tracking-[.3em] font-display">
-        <div className="flex items-center gap-3">
+      {/* Top HUD */}
+      <header className="absolute top-4 inset-x-4 sm:top-5 sm:inset-x-6 z-30 flex flex-wrap justify-between items-center gap-3 text-[.65rem] sm:text-[.7rem] tracking-[.25em] font-display">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             data-mag
             onClick={onBack}
-            className="hud-pill flex items-center gap-2 hover:border-vermilion transition cursor-pointer text-paper"
+            className="hud-pill flex items-center gap-1.5 sm:gap-2 hover:border-vermilion transition cursor-pointer text-paper py-2 px-3 sm:py-2.5 sm:px-4"
           >
             ← BACK
           </button>
-          <span className="hud-pill flex items-center gap-2 hidden sm:flex">
+          <span className="hud-pill hidden lg:flex items-center gap-2">
             <MapPin size={12} className="text-vermilion" />
             SHIBUYA · 35.6595° N, 139.7005° E
           </span>
         </div>
 
-        {/* Volume Bar & Audio Control */}
-        <div className="flex items-center gap-3">
-          <div className="hud-pill flex items-center gap-2.5">
+        {/* Volume & Sound Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hud-pill flex items-center gap-2 py-2 px-3 sm:py-2.5 sm:px-4">
             <button
               data-mag
               aria-label="toggle sound"
@@ -333,28 +324,22 @@ export default function Sanctuary({ onBack }) {
               step="0.02"
               value={sound ? volume : 0}
               onChange={handleVolumeChange}
-              className="w-16 sm:w-20 accent-[#e60026] cursor-pointer h-1.5 bg-white/20 rounded-lg"
+              className="w-14 sm:w-20 accent-[#e60026] cursor-pointer h-1.5 bg-white/20 rounded-lg"
               title="Adjust Volume"
             />
-            <span className="text-[9px] w-7 text-right font-mono text-white/70">
-              {sound ? Math.round(volume * 100) : 0}%
-            </span>
           </div>
-
-          <span className="hud-pill hidden md:inline-block">TOKYO JST {jst}</span>
+          <span className="hud-pill hidden sm:inline-block py-2 px-3 sm:py-2.5 sm:px-4">JST {jst}</span>
         </div>
       </header>
 
-      <p className="hudin absolute bottom-5 left-5 z-20 text-[.65rem] tracking-[.35em] font-display opacity-60">DRAG 360° TO ROTATE · REALTIME GLTF</p>
-
-      {/* Bottom Center: Colorway Selector Pills */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-wrap gap-2 pointer-events-auto">
+      {/* Bottom Colorway Selector Pills */}
+      <div className="absolute bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-wrap justify-center gap-2 pointer-events-auto max-w-[92vw]">
         {COLORWAYS.map((c, i) => (
           <button
             key={c.id}
             data-mag
             onClick={() => selectColorway(i)}
-            className={`hud-pill flex items-center gap-2 text-[.65rem] transition cursor-pointer ${
+            className={`hud-pill flex items-center gap-2 text-[.6rem] sm:text-[.65rem] transition cursor-pointer py-2 px-3 sm:py-2.5 sm:px-4 ${
               cwIdx === i
                 ? '!bg-white !text-ink !border-white font-bold shadow-[0_0_20px_rgba(255,255,255,0.4)]'
                 : 'hover:border-vermilion'
@@ -366,33 +351,49 @@ export default function Sanctuary({ onBack }) {
         ))}
       </div>
 
-      <aside className="absolute z-20 right-5 md:right-10 bottom-14 md:bottom-auto md:top-1/2 md:-translate-y-1/2 w-[min(88vw,340px)] bg-ink/55 backdrop-blur-xl border border-white/15 p-6 shadow-[10px_10px_0_#000]">
-        <p className="spec font-display font-bold text-[.65rem] tracking-[.45em] text-vermilion m-0 mb-1">SPECIFICATIONS — 仕様</p>
-        <h3 className="spec font-mincho font-extrabold text-2xl m-0 mb-2">The Tokyo Monolith Tote</h3>
-        {specs.map(([Icon, k, v]) => (
-          <div key={k} className="spec spec-row">
-            <Icon size={16} className="text-vermilion shrink-0 mt-1" />
-            <div><p className="m-0 text-[.62rem] tracking-[.35em] font-display opacity-60">{k}</p><p className="m-0 text-[.92rem] leading-snug">{v}</p></div>
+      {/* Desktop Specification Aside / Mobile Collapsible Drawer */}
+      <aside className={`absolute z-30 right-4 sm:right-6 bottom-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 w-[min(92vw,340px)] bg-ink/80 md:bg-ink/55 backdrop-blur-xl border border-white/15 p-5 sm:p-6 shadow-[10px_10px_0_#000] transition-all duration-300 ${specsOpen ? 'max-h-[80vh]' : 'max-h-[140px] md:max-h-none overflow-hidden'}`}>
+        <div className="flex justify-between items-center md:block">
+          <div>
+            <p className="spec font-display font-bold text-[.62rem] tracking-[.45em] text-vermilion m-0 mb-1">SPECIFICATIONS — 仕様</p>
+            <h3 className="spec font-mincho font-extrabold text-xl sm:text-2xl m-0 mb-2">The Tokyo Monolith Tote</h3>
           </div>
-        ))}
-        <div className="spec flex items-center justify-between pt-5">
-          <span className="font-mincho font-bold text-xl">¥ 248,000</span>
-          <button
-            className="btn !py-2 !px-4 !text-[.7rem] cursor-pointer"
-            data-mag
-            onClick={() => {
-              Sound.hit?.()
-              setDrawerOpen(true)
-            }}
+          <button 
+            onClick={() => setSpecsOpen(!specsOpen)} 
+            className="md:hidden text-white/70 hover:text-white p-2"
+            aria-label="Toggle Specifications"
           >
-            [ ACQUIRE ]
+            {specsOpen ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
           </button>
+        </div>
+
+        <div className={`space-y-2 sm:space-y-3 mt-2 ${specsOpen ? 'block' : 'hidden md:block'}`}>
+          {specs.map(([Icon, k, v]) => (
+            <div key={k} className="spec spec-row py-2 sm:py-2.5">
+              <Icon size={15} className="text-vermilion shrink-0 mt-0.5" />
+              <div><p className="m-0 text-[.58rem] tracking-[.3em] font-display opacity-60">{k}</p><p className="m-0 text-[.85rem] sm:text-[.9rem] leading-snug">{v}</p></div>
+            </div>
+          ))}
+          <div className="spec flex items-center justify-between pt-3 sm:pt-4 border-t border-white/10">
+            <span className="font-mincho font-bold text-lg sm:text-xl">¥ 248,000</span>
+            <button
+              className="btn !py-2 !px-3 sm:!px-4 !text-[.65rem] sm:!text-[.7rem] cursor-pointer"
+              data-mag
+              onClick={() => {
+                Sound.hit?.()
+                setDrawerOpen(true)
+              }}
+            >
+              [ ACQUIRE ]
+            </button>
+          </div>
         </div>
       </aside>
 
+      {/* Reservation Drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end bg-black/80 backdrop-blur-md">
-          <div className="relative h-full w-full max-w-md border-l border-white/20 bg-[#0e0e12] p-8 text-paper flex flex-col justify-between overflow-y-auto">
+          <div className="relative h-full w-full max-w-md border-l border-white/20 bg-[#0e0e12] p-6 sm:p-8 text-paper flex flex-col justify-between overflow-y-auto">
             <div>
               <div className="flex items-center justify-between border-b border-white/15 pb-4 text-[10px] tracking-[0.3em] font-display">
                 <span className="text-white/50">SHIBUYA FLAGSHIP CAPSULE</span>
