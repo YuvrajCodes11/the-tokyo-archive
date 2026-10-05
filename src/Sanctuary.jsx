@@ -6,7 +6,7 @@ import gsap from 'gsap'
 import { MapPin, Volume2, VolumeX, Layers, Ruler, Palette, Gem, ChevronUp, ChevronDown } from 'lucide-react'
 import { Sound, useJST, Split } from './shared.jsx'
 
-/* ───────────────────────── ACT IV — 3D TOKYO SANCTUARY (MOBILE LOCKED & OPTIMIZED) ───────────────────────── */
+/* ───────────────────────── ACT IV — 3D TOKYO SANCTUARY (MOBILE RESPONSIVE HUD) ───────────────────────── */
 export default function Sanctuary({ onBack }) {
   const root = useRef(), tc = useRef()
   const [sound, setSound] = useState(true)
@@ -34,6 +34,12 @@ export default function Sanctuary({ onBack }) {
   }
 
   useEffect(() => {
+    // Enable mobile-only viewport lock class
+    if (window.innerWidth <= 768) {
+      document.body.classList.add('sanctuary-active')
+      document.documentElement.classList.add('sanctuary-active')
+    }
+
     const el = tc.current
     if (!el) return
 
@@ -55,7 +61,6 @@ export default function Sanctuary({ onBack }) {
     const updateCam = () => {
       const aspect = window.innerWidth / window.innerHeight
       cam.aspect = aspect
-      // Perfectly scaled distance for mobile vs desktop
       cam.position.z = aspect < 1 ? 13.0 / aspect : 8.8
       cam.updateProjectionMatrix()
     }
@@ -251,6 +256,8 @@ export default function Sanctuary({ onBack }) {
       window.removeEventListener('touchend', onTouchEnd)
       el.removeEventListener('pointerdown', onPointerDown)
       el.removeEventListener('touchstart', onTouchStart)
+      document.body.classList.remove('sanctuary-active')
+      document.documentElement.classList.remove('sanctuary-active')
       pmrem.dispose()
       envRoom.dispose()
       renderer.dispose()
@@ -296,25 +303,28 @@ export default function Sanctuary({ onBack }) {
         </div>
       )}
 
-      {/* Top HUD (Non-overlapping responsive layout) */}
-      <header className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-5 z-30 flex flex-wrap justify-between items-center gap-2 text-[.65rem] tracking-[.25em] font-display pointer-events-auto">
-        <div className="flex items-center gap-2">
+      {/* Top HUD: Responsive Mobile Layout (Prevents overlapping) */}
+      <header className="absolute top-2.5 inset-x-2.5 sm:top-4 sm:inset-x-5 z-30 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 text-[.62rem] tracking-[.25em] font-display pointer-events-auto">
+        <div className="flex items-center justify-between sm:justify-start gap-2">
           <button
             data-mag
             onClick={onBack}
-            className="hud-pill flex items-center gap-1.5 hover:border-vermilion transition cursor-pointer text-paper py-2 px-3"
+            className="hud-pill flex items-center gap-1.5 hover:border-vermilion transition cursor-pointer text-paper py-1.5 px-3"
           >
             ← BACK
           </button>
+          <span className="hud-pill flex sm:hidden items-center gap-1.5 py-1.5 px-2.5 text-[9px]">
+            JST {jst}
+          </span>
           <span className="hud-pill hidden xl:flex items-center gap-2 py-2 px-3">
             <MapPin size={12} className="text-vermilion" />
             SHIBUYA · 35.6595° N, 139.7005° E
           </span>
         </div>
 
-        {/* Volume Bar & Audio Control */}
-        <div className="flex items-center gap-2">
-          <div className="hud-pill flex items-center gap-2 py-2 px-2.5 sm:px-3">
+        {/* Volume & Sound Toggle */}
+        <div className="flex items-center justify-between sm:justify-end gap-2">
+          <div className="hud-pill flex items-center gap-2 py-1.5 px-2.5 sm:px-3 flex-1 sm:flex-initial justify-center">
             <button
               data-mag
               aria-label="toggle sound"
@@ -330,7 +340,7 @@ export default function Sanctuary({ onBack }) {
               step="0.02"
               value={sound ? volume : 0}
               onChange={handleVolumeChange}
-              className="w-14 sm:w-18 accent-[#e60026] cursor-pointer h-1.5 bg-white/20 rounded-lg"
+              className="w-24 sm:w-18 accent-[#e60026] cursor-pointer h-1.5 bg-white/20 rounded-lg"
               title="Adjust Volume"
             />
             <span className="text-[8px] w-6 text-right font-mono text-white/70">
@@ -343,13 +353,13 @@ export default function Sanctuary({ onBack }) {
       </header>
 
       {/* Bottom Colorway Selector Pills */}
-      <div className="absolute bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-wrap justify-center gap-1.5 sm:gap-2 pointer-events-auto max-w-[94vw]">
+      <div className="absolute bottom-16 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-wrap justify-center gap-1.5 sm:gap-2 pointer-events-auto max-w-[96vw]">
         {COLORWAYS.map((c, i) => (
           <button
             key={c.id}
             data-mag
             onClick={() => selectColorway(i)}
-            className={`hud-pill flex items-center gap-1.5 sm:gap-2 text-[.58rem] sm:text-[.64rem] transition cursor-pointer py-1.5 px-2.5 sm:py-2 sm:px-3.5 ${
+            className={`hud-pill flex items-center gap-1.5 sm:gap-2 text-[.56rem] sm:text-[.64rem] transition cursor-pointer py-1.5 px-2.5 sm:py-2 sm:px-3.5 ${
               cwIdx === i
                 ? '!bg-white !text-ink !border-white font-bold shadow-[0_0_20px_rgba(255,255,255,0.4)]'
                 : 'hover:border-vermilion'
@@ -362,32 +372,32 @@ export default function Sanctuary({ onBack }) {
       </div>
 
       {/* Specification Sheet / Mobile Collapsible Drawer */}
-      <aside className={`absolute z-30 right-3 sm:right-5 bottom-3 md:bottom-auto md:top-1/2 md:-translate-y-1/2 w-[min(94vw,320px)] bg-ink/90 md:bg-ink/65 backdrop-blur-xl border border-white/15 p-4 sm:p-5 shadow-[10px_10px_0_#000] transition-all duration-300 ${specsOpen ? 'max-h-[75vh]' : 'max-h-[110px] md:max-h-none overflow-hidden'}`}>
+      <aside className={`absolute z-35 right-2 sm:right-5 bottom-2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 w-[min(96vw,310px)] bg-ink/95 md:bg-ink/65 backdrop-blur-xl border border-white/15 p-3.5 sm:p-5 shadow-[10px_10px_0_#000] transition-all duration-300 ${specsOpen ? 'max-h-[70vh] overflow-y-auto' : 'max-h-[85px] md:max-h-none overflow-hidden'}`}>
         <div className="flex justify-between items-center md:block">
           <div>
-            <p className="spec font-display font-bold text-[.58rem] tracking-[.4em] text-vermilion m-0 mb-1">SPECIFICATIONS — 仕様</p>
-            <h3 className="spec font-mincho font-extrabold text-lg sm:text-xl m-0 mb-1">The Tokyo Monolith Tote</h3>
+            <p className="spec font-display font-bold text-[.54rem] tracking-[.4em] text-vermilion m-0 mb-0.5">SPECIFICATIONS — 仕様</p>
+            <h3 className="spec font-mincho font-extrabold text-base sm:text-xl m-0 mb-0.5">The Tokyo Monolith Tote</h3>
           </div>
           <button 
             onClick={() => setSpecsOpen(!specsOpen)} 
-            className="md:hidden text-white/70 hover:text-white p-1"
+            className="md:hidden text-white/75 hover:text-white p-1.5 cursor-pointer"
             aria-label="Toggle Specifications"
           >
             {specsOpen ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
           </button>
         </div>
 
-        <div className={`space-y-1.5 sm:space-y-2.5 mt-2 ${specsOpen ? 'block' : 'hidden md:block'}`}>
+        <div className={`space-y-1 sm:space-y-2.5 mt-1.5 ${specsOpen ? 'block' : 'hidden md:block'}`}>
           {specs.map(([Icon, k, v]) => (
-            <div key={k} className="spec spec-row py-1.5 sm:py-2">
-              <Icon size={14} className="text-vermilion shrink-0 mt-0.5" />
-              <div><p className="m-0 text-[.55rem] tracking-[.25em] font-display opacity-60">{k}</p><p className="m-0 text-[.8rem] sm:text-[.85rem] leading-snug">{v}</p></div>
+            <div key={k} className="spec spec-row py-1 sm:py-2">
+              <Icon size={13} className="text-vermilion shrink-0 mt-0.5" />
+              <div><p className="m-0 text-[.52rem] tracking-[.25em] font-display opacity-60">{k}</p><p className="m-0 text-[.75rem] sm:text-[.85rem] leading-snug">{v}</p></div>
             </div>
           ))}
-          <div className="spec flex items-center justify-between pt-2.5 sm:pt-3 border-t border-white/10">
+          <div className="spec flex items-center justify-between pt-2 sm:pt-3 border-t border-white/10">
             <span className="font-mincho font-bold text-base sm:text-lg">¥ 248,000</span>
             <button
-              className="btn !py-1.5 !px-3 !text-[.62rem] sm:!text-[.68rem] cursor-pointer"
+              className="btn !py-1.5 !px-3 !text-[.6rem] sm:!text-[.68rem] cursor-pointer"
               data-mag
               onClick={() => {
                 Sound.hit?.()
